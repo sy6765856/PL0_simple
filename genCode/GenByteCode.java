@@ -82,30 +82,6 @@ public class GenByteCode {
 			this.outMethods();
 			this.outAttribute();
 			out.close();
-			// System.out.println("\n\nRuning java <classfile> ... \nDecopile Class File <javap -c classfile> ...");
-			// Process p = Runtime.getRuntime().exec("javap -c " + fileName);
-			// InputStream is = p.getInputStream();
-			// InputStreamReader isr = new InputStreamReader(is);
-			// BufferedReader br = new BufferedReader(isr);
-			// String line = br.readLine();
-			// while ((line = br.readLine()) != null) {
-			// 	System.out.println(line);
-			// }
-			// isr.close();
-			// br.close();
-			// is.close();
-
-			// System.out.println("Execute ClassFile <java classfile> ... \nResult:");
-			// p = Runtime.getRuntime().exec("java " + fileName);
-			// is = p.getInputStream();
-			// isr = new InputStreamReader(is);
-			// br = new BufferedReader(isr);
-			// while ((line = br.readLine()) != null) {
-			// 	System.out.println(line);
-			// }
-			// isr.close();
-			// br.close();
-			// is.close();
 		} catch (Exception e) {e.printStackTrace();}
 	}
 
@@ -956,21 +932,19 @@ public class GenByteCode {
 		code.addCodeByte(new int[] { b[0], b[1] });
 		// dup
 		code.addCodeByte(new int[] { 0x59 });
-
 		// aload
 		code.addCodeByte(new int[] { 0x19, strIndex });
-
 		// invokespecial b7
-
-		if (this.constantLineNO.get("<init>") == null) {
+		if (this.constantLineNO.get("<init>") == null)
+        {
 			cp = new CONSTANT_Utf8_info();
 			this.index_Constant++;
 			((CONSTANT_Utf8_info) cp).addByte("<init>".getBytes());
 			this.constantLineNO.put("<init>", this.index_Constant);
 			this.addCp_info(cp);
 		}
-
-		if (this.constantLineNO.get("(Ljava/lang/String;)V") == null) {
+		if (this.constantLineNO.get("(Ljava/lang/String;)V") == null)
+        {
 			cp = new CONSTANT_Utf8_info();
 			this.index_Constant++;
 			((CONSTANT_Utf8_info) cp).addByte("(Ljava/lang/String;)V"
@@ -979,7 +953,8 @@ public class GenByteCode {
 					this.index_Constant);
 			this.addCp_info(cp);
 		}
-		if (this.constantLineNO.get("IntegerInitName") == null) {
+		if (this.constantLineNO.get("IntegerInitName") == null)
+        {
 			cp = new CONSTANT_NameAndType_info();
 			this.index_Constant++;
 			((CONSTANT_NameAndType_info) cp).setName_index(this.constantLineNO
@@ -1059,9 +1034,11 @@ public class GenByteCode {
 		code.addMaxLocals();
 	}
 
-	private void cnvtFloat(Code code, short strIndex, short varIndex) {
+	private void cnvtFloat(Code code, short strIndex, short varIndex)
+    {
 		Cp_info cp;
-		if (this.constantLineNO.get("java/lang/Float") == null) {
+		if (this.constantLineNO.get("java/lang/Float") == null)
+        {
 			cp = new CONSTANT_Utf8_info();
 			this.index_Constant++;
 			((CONSTANT_Utf8_info) cp).addByte("java/lang/Float".getBytes());
@@ -1070,7 +1047,8 @@ public class GenByteCode {
 		}
 
 		// new bb xx xx
-		if (this.constantLineNO.get("FloatClass") == null) {
+		if (this.constantLineNO.get("FloatClass") == null)
+        {
 			cp = new CONSTANT_Class_info();
 			this.index_Constant++;
 			((CONSTANT_Class_info) cp).setName_index(this.constantLineNO
@@ -1429,7 +1407,7 @@ public class GenByteCode {
 			if (varType.equals("real")) {
 				// fload
 				code.addCodeByte(new int[] { 0x17, var_index });
-			} else {
+			}else {
 				// iload
 				code.addCodeByte(new int[] { 0x15, var_index });
 			}

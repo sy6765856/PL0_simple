@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import parse.Parsing;
 import main.Plc;
-public class Lexical {
-
+public class Lexical
+{
 	private HashMap<String, Symbol> symbol_tb;
 	private RandomAccessFile randomFile; // file stream
 	private StringBuffer wordbuf;
@@ -13,7 +13,8 @@ public class Lexical {
 	private HashMap<String, ArrayList<String>> funArgs;
 	public boolean isChar;
 
-	public Lexical(RandomAccessFile randomFile) {
+	public Lexical(RandomAccessFile randomFile)
+    {
 		symbol_tb = new HashMap<String, Symbol>();
 		funArgs = new HashMap<String, ArrayList<String>>();
 		this.randomFile = randomFile;
@@ -213,23 +214,19 @@ public class Lexical {
 	/*
 	 * is the word key_word?
 	 */
-	public boolean isKeyWord(String word) {
-		// binary search algorithm
+	public boolean isKeyWord(String word)
+    {
 		int begin = 0;
 		int end = Plc.key_words.length - 1;
 		int mid = (begin + end) / 2;
-		while (begin <= end) {
+		while (begin <= end)
+        {
 			if (word.compareToIgnoreCase(Plc.key_words[mid]) == 0
 					|| word.compareToIgnoreCase(Plc.key_words[begin]) == 0
-					|| word.compareToIgnoreCase(Plc.key_words[end]) == 0) {
-				return true;
-			} else if (word.compareToIgnoreCase(Plc.key_words[mid]) < 0) {
-				end = mid - 1;
-			} else if (word.compareToIgnoreCase(Plc.key_words[mid]) > 0) {
-				begin = mid + 1;
-			} else {
-				return false;
-			}
+					|| word.compareToIgnoreCase(Plc.key_words[end]) == 0)return true;
+			else if (word.compareToIgnoreCase(Plc.key_words[mid]) < 0)end = mid - 1;
+			else if (word.compareToIgnoreCase(Plc.key_words[mid]) > 0)begin = mid + 1;
+			else return false;
 			mid = (begin + end) / 2;
 		}
 		return false;
@@ -239,14 +236,10 @@ public class Lexical {
 	 * is the word identity?
 	 */
 	public boolean isIdentity(String word) {
-		if (this.isKeyWord(word)) {
-			return false;
-		}
+		if (this.isKeyWord(word))return false;
 		if (!(word.charAt(0) >= 'a' && word.charAt(0) <= 'z'
 				|| word.charAt(0) >= 'A' && word.charAt(0) <= 'Z' || word
-				.charAt(0) == '_')) {
-			return false;
-		}
+				.charAt(0) == '_'))	return false;
 		for (int i = 1; i < word.length(); i++) {
 			if (!((word.charAt(0) >= 'a' && word.charAt(0) <= 'z')
 					|| (word.charAt(0) >= 'A' && word.charAt(0) <= 'Z')
@@ -304,10 +297,6 @@ public class Lexical {
 		}
 		return false;
 	}
-
-	/*
-	 * is int?
-	 */
 	public boolean isInt(String word) {
 		for (int i = 0; i < word.length(); i++) {
 			if (!(word.charAt(i) >= '0' && word.charAt(i) <= '9')) {

@@ -11,9 +11,9 @@ public class Parsing
 	private String word;
 	private GenByteCode genCode;
 	private String classname;
-	private String currentFuncName;
-	private String currentVarType;
-	private ArrayList<String> currentFuncNameStack;
+	private String curFuncName;
+	private String curVarType;
+	private ArrayList<String> curFuncNameStack;
 	private ArrayList<String> stack_digtal;
 	private ArrayList<String> stack_op;
 	private ArrayList<Integer> express_inst;
@@ -21,9 +21,9 @@ public class Parsing
 
 	public Parsing(Lexical lexi)
     {
-		currentFuncName = "main";
+		curFuncName = "main";
 		callType = 'a';
-		currentFuncNameStack = new ArrayList<String>();
+		curFuncNameStack = new ArrayList<String>();
 		this.lexi = lexi;
 		genCode = new GenByteCode();
 		if (syntax_check())genCode.genClassFile(this.classname);
@@ -35,11 +35,11 @@ public class Parsing
         {
 			new error(lexi.line,24);
 			return false;
-		}return checkSubProgram(".");
+		}return SubProgram(".");
 	}
 
-	public String getCurrentFuncname() {return this.currentFuncName;}
-	private boolean checkSubProgram(String end)
+	public String getcurFuncname() {return this.curFuncName;}
+	private boolean SubProgram(String end)
     {
 		while (true)
         {
@@ -77,16 +77,6 @@ public class Parsing
 				word = lexi.readWord();
 				continue;
 			}
-            // else if (word.equals("function"))
-            // {
-			// 	if (!checkFunction())
-            //     {
-			// 		System.out.println("Error in Function <" + lexi.line
-			// 				+ ">");
-			// 		return false;
-			// 	}
-			// 	continue;
-			// }
             else if (word.equals("procedure"))
             {
 				if (!checkProcedure())
@@ -104,7 +94,7 @@ public class Parsing
 		}return true;
 	}
 
-	private boolean checkStatement()
+	private boolean Statement()
     {
 		if (word.equals("call"))return doCallBlock('a');
         else if (word.equals("begin"))return doBeginBlock();
@@ -112,8 +102,6 @@ public class Parsing
 		else if (word.equals("while"))return doWhileBlock();
 		else if (word.equals("read"))return doReadBlock();
 	    else if (word.equals("write"))return doWriteBlock();
-		else if (word.equals("for")) return doForBlock();
-	    else if (word.equals("repeat"))return doRepeatBlock();
 		else if (!doIdentBlock())return false;
 		return true;
 	}
@@ -205,7 +193,7 @@ public class Parsing
 						if (s.getType() == 2)type = "cvar";
 						else if (s.getType() == 5)type = "var";
 						else if (s.getType() == 6)type = "fvar";
-						this.genCode.genCallFuncArgs(this.currentFuncName,word, varType, type);
+						this.genCode.genCallFuncArgs(this.curFuncName,word, varType, type);
 					}
                     else if (lexi.getNextChar() == '\''	&& lexi.isChar(word))
                     {
@@ -217,7 +205,7 @@ public class Parsing
 							return false;
 						}
 						Integer ic = (int) word.charAt(0);
-						this.genCode.genCallFuncArgs(this.currentFuncName, ic
+						this.genCode.genCallFuncArgs(this.curFuncName, ic
 								.toString(), "char", "const");
 
 					} else if (lexi.isBool(word)) {
@@ -229,19 +217,19 @@ public class Parsing
 						}
 						// boolean args const
 						if (word.equals("true")) {
-							this.genCode.genCallFuncArgs(this.currentFuncName,
+							this.genCode.genCallFuncArgs(this.curFuncName,
 									"1", "boolean", "const");
 						} else {
-							this.genCode.genCallFuncArgs(this.currentFuncName,
+							this.genCode.genCallFuncArgs(this.curFuncName,
 									"0", "boolean", "const");
 						}
 
 					} else if (lexi.isInt(word)) {
 						if (funargsType.equals("integer")) {
-							this.genCode.genCallFuncArgs(this.currentFuncName,
+							this.genCode.genCallFuncArgs(this.curFuncName,
 									word, "integer", "const");
 						} else if (funargsType.equals("real")) {
-							this.genCode.genCallFuncArgs(this.currentFuncName,
+							this.genCode.genCallFuncArgs(this.curFuncName,
 									word, "real", "const");
 						} else {
 							System.out.println("Error<" + lexi.line + "> "
@@ -257,7 +245,7 @@ public class Parsing
 							return false;
 						}
 						// real args const
-						this.genCode.genCallFuncArgs(this.currentFuncName,
+						this.genCode.genCallFuncArgs(this.curFuncName,
 								word, "real", "const");
 					} else {
 						System.out.println("Error<" + lexi.line
@@ -278,7 +266,7 @@ public class Parsing
 				} else {
 					funArgs.append("V");
 				}
-				this.genCode.genCall(this.currentFuncName, ctype, funcname,
+				this.genCode.genCall(this.curFuncName, ctype, funcname,
 						funArgs.toString());
 			} else {
 				System.out.println("Error<" + lexi.line + "> " + word
@@ -317,7 +305,7 @@ public class Parsing
 		}
 		word = lexi.readWord();
 		if (!this.checkStatement())return false;
-		this.genCode.genBackIf(this.currentFuncName);
+		this.genCode.genBackIf(this.curFuncName);
 		if (word.equals("else"))
         {
 			word = lexi.readWord();
@@ -325,13 +313,13 @@ public class Parsing
 				return false;
 			}
 		}
-		this.genCode.genBackElse(this.currentFuncName);
+		this.genCode.genBackElse(this.curFuncName);
 		return true;
 	}
 
 	private boolean doWhileBlock()
     {
-		this.genCode.genWhile(this.currentFuncName);
+		this.genCode.genWhile(this.curFuncName);
 		if (!this.doCondition())return false;
 		if (!word.equals("do"))
         {
@@ -340,7 +328,7 @@ public class Parsing
 		}
 		word = lexi.readWord();
 		if (!this.checkStatement())return false;
-		this.genCode.genBackWhile(this.currentFuncName);
+		this.genCode.genBackWhile(this.curFuncName);
 		return true;
 	}
 
@@ -376,7 +364,7 @@ public class Parsing
 				}
 				word = lexi.readWord();
 			}
-			this.genCode.genRead(this.currentFuncName, s.getName(), s.getValueType());
+			this.genCode.genRead(this.curFuncName, s.getName(), s.getValueType());
 			if (word.equals(",")) {
 				word = lexi.readWord();
 				continue;
@@ -413,7 +401,7 @@ public class Parsing
 			else if (argType.equals("integer"))argType = "(I)V";
 			else if (argType.equals("char"))argType = "(C)V";
             else if (argType.equals("boolean"))argType = "(Z)V";
-			this.genCode.genWrite(this.currentFuncName, express_inst, argType);
+			this.genCode.genWrite(this.curFuncName, express_inst, argType);
 
 			if (word.equals(","))continue;
 			else break;
@@ -567,7 +555,7 @@ public class Parsing
 						express_inst.add((Integer) symbol.getValue());
 						if (this.stack_digtal.get(stack_digtal.size() - 2)
 								.equals("real")
-								|| (this.currentVarType != null && this.currentVarType
+								|| (this.curVarType != null && this.curVarType
 										.equals("real"))) {
 							express_inst.add(0x86);
 							stack_digtal.remove(stack_digtal.size() - 1);
@@ -609,7 +597,7 @@ public class Parsing
 						if (!symbol.getValueType().equals("real")) {
 							if (this.stack_digtal.get(stack_digtal.size() - 2)
 									.equals("real")
-									|| (this.currentVarType != null && this.currentVarType
+									|| (this.curVarType != null && this.curVarType
 											.equals("real"))) {
 								express_inst.add(0x86);
 								stack_digtal.remove(stack_digtal.size() - 1);
@@ -620,7 +608,7 @@ public class Parsing
                     else if (symbol.getType() == 5)//var
                     {
 						if (this.genCode.getStackMap()
-								.get(this.currentFuncName).getVar_indexMap()
+								.get(this.curFuncName).getVar_indexMap()
 								.get(symbol.getName()) == null) {
 							System.out
 									.println("Error<" + lexi.line + "> "
@@ -629,7 +617,7 @@ public class Parsing
 							return false;
 						}
 						int pc = this.genCode.getStackMap().get(
-								this.currentFuncName).getVar_indexMap().get(symbol.getName());
+								this.curFuncName).getVar_indexMap().get(symbol.getName());
 						if (symbol.getValueType().equals("real")) {
 							// fload
 							if (!this.stack_digtal.get(stack_digtal.size() - 2)
@@ -647,7 +635,7 @@ public class Parsing
 							express_inst.add(pc);
 							if (this.stack_digtal.get(stack_digtal.size() - 2)
 									.equals("real")
-									|| (this.currentVarType != null && this.currentVarType
+									|| (this.curVarType != null && this.curVarType
 											.equals("real"))) {
 								express_inst.add(0x86);
 								stack_digtal.remove(stack_digtal.size() - 1);
@@ -658,7 +646,7 @@ public class Parsing
 							express_inst.add(pc);
 							if (this.stack_digtal.get(stack_digtal.size() - 2)
 									.equals("real")
-									|| (this.currentVarType != null && this.currentVarType
+									|| (this.curVarType != null && this.curVarType
 											.equals("real"))) {
 								express_inst.add(0x86);
 								stack_digtal.remove(stack_digtal.size() - 1);
@@ -669,7 +657,7 @@ public class Parsing
 							express_inst.add(pc);
 							if (this.stack_digtal.get(stack_digtal.size() - 2)
 									.equals("real")
-									|| (this.currentVarType != null && this.currentVarType
+									|| (this.curVarType != null && this.curVarType
 											.equals("real"))) {
 								express_inst.add(0x86);
 								stack_digtal.remove(stack_digtal.size() - 1);
@@ -689,7 +677,7 @@ public class Parsing
 			express_inst.add(0x12);
 			express_inst.add(this.genCode.genInt(new Integer(word.charAt(0))));
 			if (this.stack_digtal.get(stack_digtal.size() - 2).equals("real")
-					|| (this.currentVarType != null && this.currentVarType
+					|| (this.curVarType != null && this.curVarType
 							.equals("real"))) {
 				express_inst.add(0x86);
 				stack_digtal.remove(stack_digtal.size() - 1);
@@ -700,7 +688,7 @@ public class Parsing
 			express_inst.add(0x12);
 			express_inst.add(this.genCode.genInt(new Integer(word)));
 			if (this.stack_digtal.get(stack_digtal.size() - 2).equals("real")
-					|| (this.currentVarType != null && this.currentVarType
+					|| (this.curVarType != null && this.curVarType
 							.equals("real"))) {
 				express_inst.add(0x86);
 				stack_digtal.remove(stack_digtal.size() - 1);
@@ -723,7 +711,7 @@ public class Parsing
 				express_inst.add(0x4);
 			}
 			if (this.stack_digtal.get(stack_digtal.size() - 2).equals("real")
-					|| (this.currentVarType != null && this.currentVarType
+					|| (this.curVarType != null && this.curVarType
 							.equals("real"))) {
 				express_inst.add(0x86);
 				stack_digtal.remove(stack_digtal.size() - 1);
@@ -796,8 +784,8 @@ public class Parsing
 				if (v1 != null) {
 					this.express_inst.add(0x60);// iadd
 				}
-				if (this.currentVarType != null
-						&& this.currentVarType.equals("real")) {
+				if (this.curVarType != null
+						&& this.curVarType.equals("real")) {
 					this.express_inst.add(0x86);
 				}
 
@@ -805,8 +793,8 @@ public class Parsing
 				if (v1 != null) {
 					this.express_inst.add(0x62);// fadd
 				}
-				if (this.currentVarType != null
-						&& this.currentVarType.equals("integer")) {
+				if (this.curVarType != null
+						&& this.curVarType.equals("integer")) {
 					this.express_inst.add(0x8b);
 				}
 			}
@@ -818,8 +806,8 @@ public class Parsing
 				} else {
 					this.express_inst.add(0x74);
 				}
-				if (this.currentVarType != null
-						&& this.currentVarType.equals("real")) {
+				if (this.curVarType != null
+						&& this.curVarType.equals("real")) {
 					this.express_inst.add(0x86);
 				}
 			} else {
@@ -829,8 +817,8 @@ public class Parsing
 				} else {
 					this.express_inst.add(0x76);
 				}
-				if (this.currentVarType != null
-						&& this.currentVarType.equals("integer")) {
+				if (this.curVarType != null
+						&& this.curVarType.equals("integer")) {
 					this.express_inst.add(0x8b);
 				}
 			}
@@ -838,15 +826,15 @@ public class Parsing
 			if (type.equals("integer")) {
 				// imul
 				this.express_inst.add(0x68);
-				if (this.currentVarType != null
-						&& this.currentVarType.equals("real")) {
+				if (this.curVarType != null
+						&& this.curVarType.equals("real")) {
 					this.express_inst.add(0x86);
 				}
 			} else {
 				// fmul
 				this.express_inst.add(0x6a);
-				if (this.currentVarType != null
-						&& this.currentVarType.equals("integer")) {
+				if (this.curVarType != null
+						&& this.curVarType.equals("integer")) {
 					this.express_inst.add(0x8b);
 				}
 			}
@@ -854,15 +842,15 @@ public class Parsing
 			if (type.equals("integer")) {
 				// idiv
 				this.express_inst.add(0x6c);
-				if (this.currentVarType != null
-						&& this.currentVarType.equals("real")) {
+				if (this.curVarType != null
+						&& this.curVarType.equals("real")) {
 					this.express_inst.add(0x86);
 				}
 			} else {
 				// fdiv
 				this.express_inst.add(0x6e);
-				if (this.currentVarType != null
-						&& this.currentVarType.equals("integer")) {
+				if (this.curVarType != null
+						&& this.curVarType.equals("integer")) {
 					this.express_inst.add(0x8b);
 				}
 			}
@@ -871,155 +859,6 @@ public class Parsing
 					+ " is not operator.");
 			return false;
 		}
-		return true;
-	}
-
-	private boolean doForBlock() {
-		word = lexi.readWord();
-		if (!lexi.isWordMarked(word)) {
-			System.out.println("Error<" + lexi.line + "> " + word
-					+ " undefined.");
-			return false;
-		} else {
-			if (!(lexi.getSymbol(word).getType() == 5 || lexi.getSymbol(
-					word).getType() == 6)) {
-				System.out.println("Error<" + lexi.line + "> " + word
-						+ " must be a variable.");
-				return false;
-			}
-			if (!(lexi.getSymbol(word).getValueType().equals("integer") || lexi
-					.getSymbol(word).getValueType().equals("real"))) {
-				System.out.println("Error<" + lexi.line + "> " + word
-						+ " illege type here.");
-				return false;
-			}
-		}
-		String varname = word;
-		String varType = lexi.getSymbol(word).getValueType();
-		word = lexi.readWord();
-		if (!word.equals(":=")) {
-			System.out.println("Error<" + lexi.line + "> "
-					+ "':=' missing .");
-			return false;
-		}
-		int type1 = 7;
-		String varType1 = null;
-		String varValue1 = null;
-		word = lexi.readWord();
-		Symbol symbol = lexi.getSymbol(word);
-		if (symbol != null) {
-			type1 = symbol.getType();
-			if (!(type1 == 2 || type1 == 5 || type1 == 6)) {
-				System.out.println("Error<" + lexi.line + "> " + word
-						+ " not allowed here.");
-				return false;
-			}
-			varType1 = symbol.getValueType();
-			if (!(varType1.equals("integer") || varType1.equals("real"))) {
-				System.out
-						.println("Error<"
-								+ lexi.line
-								+ ">"
-								+ word
-								+ " not allowed here . only integer and real is allowed");
-				return false;
-			}
-			varValue1 = word;
-		} else if (lexi.isInt(word)) {
-			varValue1 = word;
-			varType1 = "integer";
-		} else if ((lexi.isFloat(word))) {
-			varValue1 = word;
-			varType1 = "real";
-		} else {
-			System.out.println("Error<" + lexi.line + "> " + word
-					+ " not allowed here.");
-			return false;
-		}
-		word = lexi.readWord();
-		int inc;
-		if (word.equals("to")) {
-			inc = 1;
-		} else if (word.equals("downto")) {
-			inc = -1;
-		} else {
-			System.out.println("Error<" + lexi.line + "> "
-					+ "to or downto is missing .");
-			return false;
-		}
-		int type2 = 7;
-		String varType2;
-		String varValue2;
-		word = lexi.readWord();
-		symbol = lexi.getSymbol(word);
-		if (symbol != null) {
-			type2 = symbol.getType();// var const functionVar
-			if (!(type2 == 2 || type2 == 5 || type2 == 6)) {
-				System.out.println("Error<" + lexi.line + "> " + word
-						+ " not allowed here.");
-				return false;
-			}
-			varType2 = symbol.getValueType();
-			if (!(varType2.equals("integer") || varType2.equals("real"))) {
-				System.out
-						.println("Error<"
-								+ lexi.line
-								+ ">"
-								+ word
-								+ " not allowed here . only integer and real is allowed");
-				return false;
-			}
-			varValue2 = word;
-		} else if (lexi.isInt(word)) {
-			varValue2 = word;
-			varType2 = "integer";
-		} else if ((lexi.isFloat(word))) {
-			varValue2 = word;
-			varType2 = "real";
-		} else {
-			System.out.println("Error<" + lexi.line + "> " + word
-					+ " not allowed here.");
-			return false;
-		}
-		if (varType.equals("integer") && varType1.equals("real")) {
-			System.out.println("Error<" + lexi.line
-					+ "> assign real type to integer variable");
-			return false;
-		}
-		this.genCode.genForHead(this.currentFuncName, varname, varType,
-				varValue1, varType1, type1, varValue2, varType2, type2, inc);
-		word = lexi.readWord();
-		if (!word.equals("do")) {
-			System.out.println("Error<" + lexi.line + "> "
-					+ "'do' is missing .");
-			return false;
-		}
-		word = lexi.readWord();
-		if (!this.checkStatement()) {
-			return false;
-		}
-		if (!word.equals(";")) {
-			System.out.println("Error<" + lexi.line + "> ';' is missing");
-			return false;
-		}
-
-		this.genCode.genForTail(this.currentFuncName, inc, varname, varType);
-		word = lexi.readWord();
-		return true;
-	}
-
-	private boolean doRepeatBlock() {
-		word = lexi.readWord();
-		this.genCode.genRepeat(this.currentFuncName);
-		while (!word.equals("until")) {
-			if (!this.checkStatement()) {
-				return false;
-			}
-		}
-		if (!doCondition()) {
-			return false;
-		}
-		this.genCode.genBackRepeat(this.currentFuncName);
 		return true;
 	}
 
@@ -1036,7 +875,7 @@ public class Parsing
 					return false;
 				}
 				leftType = this.stack_digtal.get(this.stack_digtal.size() - 1);
-				this.genCode.genCondition(this.currentFuncName, leftType,
+				this.genCode.genCondition(this.curFuncName, leftType,
 						express_inst, "<>", "void", null);
 				return true;
 			} else {
@@ -1063,7 +902,7 @@ public class Parsing
 			return false;
 		}
 		rightType = this.stack_digtal.get(this.stack_digtal.size() - 1);
-		this.genCode.genCondition(this.currentFuncName, leftType, inst1,
+		this.genCode.genCondition(this.curFuncName, leftType, inst1,
 				cmptype, rightType, this.express_inst);
 		return true;
 	}
@@ -1093,7 +932,7 @@ public class Parsing
 		stack_op = new ArrayList<String>();
 		stack_op.add("#");
 		stack_digtal.add("#");
-		this.currentVarType = lexi.getSymbol(varname).getValueType();
+		this.curVarType = lexi.getSymbol(varname).getValueType();
 		if (!this.doExpress()) {
 			if (word.equals("call"))
             {
@@ -1102,20 +941,20 @@ public class Parsing
 					return false;
 				} else {
 					// remove pop
-					this.genCode.removeLastCode(this.currentFuncName);
+					this.genCode.removeLastCode(this.curFuncName);
 				}
 			} else {
 				return false;
 			}
 		}
-		this.genCode.genAssignValue(this.currentFuncName, varname,
-				this.express_inst, this.currentVarType);
-		this.currentVarType = null;
+		this.genCode.genAssignValue(this.curFuncName, varname,
+				this.express_inst, this.curVarType);
+		this.curVarType = null;
 		// lexi.setSymbolValue(varname, this.express_inst);
 		return true;
 	}
 
-	private boolean checkVar() {
+	private boolean Var() {
 		Symbol s = new Symbol();
 		word = lexi.readWord();
 		if (!lexi.isIdentity(word)) {
@@ -1152,7 +991,7 @@ public class Parsing
 		return true;
 	}
 
-	private boolean checkFunction() {
+	private boolean Function() {
 		this.callType = 'f';
 		Symbol symbol = new Symbol();
 		word = lexi.readWord();
@@ -1161,8 +1000,8 @@ public class Parsing
 					+ " is not a identity.");
 			return false;
 		}
-		this.currentFuncNameStack.add(this.currentFuncName);
-		this.currentFuncName = word;
+		this.curFuncNameStack.add(this.curFuncName);
+		this.curFuncName = word;
 		symbol.setName(word);
 		symbol.setType(3);
 		this.genCode.getStackMap().put(word, new VarStack());
@@ -1203,7 +1042,7 @@ public class Parsing
 		// generate code
 		this.genCode.genFun(symbol.getName(), genArgs(symbol.getName(), symbol
 				.getValueType()), (short) lexi.getFuncArgs(
-				this.currentFuncName).size());
+				this.curFuncName).size());
 		word = lexi.readWord();
 		if (!this.checkSubProgram(";")) {
 			return false;
@@ -1262,19 +1101,19 @@ public class Parsing
 					+ "> Unknow return value type '" + word + "'");
 			return false;
 		}
-		// check return type
+		//  return type
 		if (orgType.equals(symbol.getValueType())) {
 
 		} else {
 			System.out.println("Error<" + lexi.line + "> function "
-					+ this.currentFuncName + " return type uncomparable.");
+					+ this.curFuncName + " return type uncomparable.");
 			return false;
 		}
 		// function return code;
-		this.genCode.genFunRet(this.currentFuncName, value, valueType, retType);
+		this.genCode.genFunRet(this.curFuncName, value, valueType, retType);
 		word = lexi.readWord();
-		this.currentFuncName = this.currentFuncNameStack
-				.get(this.currentFuncNameStack.size() - 1);
+		this.curFuncName = this.curFuncNameStack
+				.get(this.curFuncNameStack.size() - 1);
 		this.callType = 'a';
 		return true;
 	}
@@ -1333,9 +1172,9 @@ public class Parsing
 						+ " is not a identity.");
 				return false;
 			}
-			this.genCode.getStackMap().get(this.currentFuncName)
+			this.genCode.getStackMap().get(this.curFuncName)
 					.getVar_indexMap().put(word, index);
-			this.genCode.getStackMap().get(this.currentFuncName).addCurrenPc();
+			this.genCode.getStackMap().get(this.curFuncName).addCurrenPc();
 			s.setName(word);
 			s.setType(6);
 			word = lexi.readWord();
@@ -1361,7 +1200,7 @@ public class Parsing
 		return true;
 	}
 
-	private boolean checkProcedure() {
+	private boolean Procedure() {
 		Symbol symbol = new Symbol();
 		word = lexi.readWord();
 		if (!lexi.isIdentity(word)) {
@@ -1369,8 +1208,8 @@ public class Parsing
 					+ " is not a identity.");
 			return false;
 		}
-		this.currentFuncNameStack.add(this.currentFuncName);
-		this.currentFuncName = word;
+		this.curFuncNameStack.add(this.curFuncName);
+		this.curFuncName = word;
 		this.genCode.getStackMap().put(word, new VarStack());
 		symbol.setName(word);
 		symbol.setType(4);
@@ -1402,14 +1241,14 @@ public class Parsing
 			return false;
 		}
 		// lexi.addElem2Symbol(symbol);
-		this.genCode.genFunRet(this.currentFuncName, 0, null, "void");
+		this.genCode.genFunRet(this.curFuncName, 0, null, "void");
 		word = lexi.readWord();
-		this.currentFuncName = this.currentFuncNameStack
-				.get(this.currentFuncNameStack.size() - 1);
+		this.curFuncName = this.curFuncNameStack
+				.get(this.curFuncNameStack.size() - 1);
 		return true;
 	}
 
-	private boolean checkHead() {
+	private boolean Head() {
 		// program name ; !no arguments.
 		word = lexi.readWord();
 		if (word != null && word.equals("program")) {
@@ -1436,7 +1275,7 @@ public class Parsing
 		return true;
 	}
 
-	private boolean checkConst() {
+	private boolean Const() {
 		word = lexi.readWord();
 		while (!word.equals(";")) {
 			if (!lexi.isIdentity(word)) {
@@ -1502,7 +1341,7 @@ public class Parsing
 		return true;
 	}
 
-	private boolean checkEnd(String end) {
+	private boolean End(String end) {
 		if (end.equals(".")) {
 			word = lexi.readWord();
 			if (word == null) {
