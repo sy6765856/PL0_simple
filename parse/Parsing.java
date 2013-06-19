@@ -4,7 +4,7 @@ import genCode.GenByteCode;
 import genCode.store.VarStack;
 import lexical.Lexical;
 import lexical.Symbol;
-
+import parse.error;
 public class Parsing
 {
 	private Lexical lexi;
@@ -19,140 +19,142 @@ public class Parsing
 	private ArrayList<Integer> express_inst;
 	private char callType;
 
-	public Parsing(Lexical lexi) {
+	public Parsing(Lexical lexi)
+    {
 		currentFuncName = "main";
 		callType = 'a';
 		currentFuncNameStack = new ArrayList<String>();
 		this.lexi = lexi;
 		genCode = new GenByteCode();
-		if (syntax_check()) {
-			genCode.genClassFile(this.classname);
-		}
+		if (syntax_check())genCode.genClassFile(this.classname);
 	}
 
-	private boolean syntax_check() {
-		if (!checkHead()) {
-			System.out.println("Error in Header");
+	private boolean syntax_check()
+    {
+		if (!checkHead())
+        {
+			new error(lexi.line,24);
 			return false;
-		}
-		return checkSubProgram(".");
+		}return checkSubProgram(".");
 	}
 
-	public String getCurrentFuncname() {
-		return this.currentFuncName;
-	}
-
-	private boolean checkSubProgram(String end) {
-		while (true) {
-			if (word == null) {
-				System.out.println("Error<" + lexi.line + "> word is null");
+	public String getCurrentFuncname() {return this.currentFuncName;}
+	private boolean checkSubProgram(String end)
+    {
+		while (true)
+        {
+			if (word == null)
+            {
+                new error(lexi.line,0)
 				break;
 			}
-			if (word.equals(end)) {
-				if (!checkEnd(end)) {
-					return false;
-				}
+			if (word.equals(end))
+            {
+				if (!checkEnd(end))return false;
 				break;
 			}
-			if (word.equals("const")) {
-				if (!checkConst()) {
-					System.out.println("Error in const <" + lexi.line + ">");
+			if (word.equals("const"))
+            {
+				if (!checkConst())
+                {
+                    new error(lexi.line,25);
 					return false;
 				}
 				continue;
-			} else if (word.equals("var")) {
-				if (!checkVar()) {
-					System.out.println("Error in var <" + lexi.line + ">");
+			}
+            else if (word.equals("var"))
+            {
+				if (!checkVar())
+                {
+                    new error(lexi.line,26);
 					return false;
 				}
-				if (!word.equals(";")) {
-					System.out.println("Error<" + lexi.line + "> "
-							+ "missing ';'");
+				if (!word.equals(";"))
+                {
+                    new error(lexi.line,11);
 					return false;
 				}
 				word = lexi.readWord();
 				continue;
-			} else if (word.equals("function")) {
-				if (!checkFunction()) {
-					System.out.println("Error in Function <" + lexi.line
-							+ ">");
-					return false;
-				}
-				continue;
-			} else if (word.equals("procedure")) {
-				if (!checkProcedure()) {
-					System.out.println("Error in Procedure <" + lexi.line
-							+ ">");
-					return false;
-				}
-				continue;
-			} else if (!checkStatement()) {
-				System.out.println("Error<" + lexi.line
-						+ "> in checkStatement");
-				return false;
+			}
+            // else if (word.equals("function"))
+            // {
+			// 	if (!checkFunction())
+            //     {
+			// 		System.out.println("Error in Function <" + lexi.line
+			// 				+ ">");
+			// 		return false;
+			// 	}
+			// 	continue;
+			// }
+            else if (word.equals("procedure"))
+            {
+				if (!checkProcedure())
+                {
+                    new error(lexi.line,27);
+                    return false;
+				}continue;
+			}
+            else if (!checkStatement())
+            {
+                new error(lexi.line,28);
+                return false;
 			}
 
-		}
+		}return true;
+	}
+
+	private boolean checkStatement()
+    {
+		if (word.equals("call"))return doCallBlock('a');
+        else if (word.equals("begin"))return doBeginBlock();
+		else if (word.equals("if"))return doIfBlock();
+		else if (word.equals("while"))return doWhileBlock();
+		else if (word.equals("read"))return doReadBlock();
+	    else if (word.equals("write"))return doWriteBlock();
+		else if (word.equals("for")) return doForBlock();
+	    else if (word.equals("repeat"))return doRepeatBlock();
+		else if (!doIdentBlock())return false;
 		return true;
 	}
 
-	private boolean checkStatement() {
-		if (word.equals("call")) {
-			return doCallBlock('a');
-		} else if (word.equals("begin")) {
-			return doBeginBlock();
-		} else if (word.equals("if")) {
-			return doIfBlock();
-		} else if (word.equals("while")) {
-			return doWhileBlock();
-		} else if (word.equals("read")) {
-			return doReadBlock();
-		} else if (word.equals("write")) {
-			return doWriteBlock();
-		} else if (word.equals("for")) {
-			return doForBlock();
-		} else if (word.equals("repeat")) {
-			return doRepeatBlock();
-		} else if (!doIdentBlock()) {
-			return false;
-		}
-		return true;
-	}
-
-	private boolean doCallBlock(char ctype) {// f - function p - procedure a
-		// - all
+	private boolean doCallBlock(char ctype)
+    {
 		word = lexi.readWord();
 		String funcname;
-		if (lexi.isIdentity(word)) {
+		if (lexi.isIdentity(word))
+        {
 			Symbol sym;
-			if ((sym = lexi.getSymbol(word)) != null) {
+			if ((sym = lexi.getSymbol(word)) != null)
+            {
 				if (!(sym.getType() == 3 || sym.getType() == 4)) {
 					System.out.println("Error<" + lexi.line + "> " + word
 							+ " is not a function or procedure.");
 					return false;
 				}
-				if (ctype == 'f' && sym.getType() == 4) {
+				if (ctype == 'f' && sym.getType() == 4)
+                {
 					System.out.println("Error<" + lexi.line
 							+ "> procedure does not return a value");
 					return false;
-				} else if (sym.getType() == 3) {
-					ctype = 'f';
 				}
+                else if (sym.getType() == 3)ctype = 'f';
 				funcname = word;
 				word = lexi.readWord();
-				if (!word.equals("(")) {
-					System.out.println("Error<" + lexi.line
-							+ "> '(' missing .");
-					return false;
+				if (!word.equals("("))
+                {
+                    new error(lexi.line,1);
+                    return false;
 				}
 
 				int i = 0;
 				StringBuffer funArgs = new StringBuffer();
 				funArgs.append("(");
-				while (true) {
+				while (true)
+                {
 					word = lexi.readWord();
-					// System.out.println(word);
-					if (word.equals(")")) {
+					if (word.equals(")"))
+                    {
 						funArgs.append(")");
 						break;
 					}
@@ -160,7 +162,8 @@ public class Parsing
 						continue;
 					}
 					String funargsType = lexi.getFuncArgs(funcname).get(i);
-					if (funargsType.equals("char")) {
+					if (funargsType.equals("char"))
+                    {
 						funArgs.append("C");
 					} else if (funargsType.equals("integer")) {
 						funArgs.append("I");
@@ -171,9 +174,9 @@ public class Parsing
 					}
 					if (lexi.isIdentity(word) && lexi.isWordMarked(word)) {
 						Symbol s = lexi.getSymbol(word);
-						if (s == null) {
-							System.out.println("Error<" + lexi.line + "> "
-									+ word + " not defined");
+						if (s == null)
+                        {
+                            new error(lexi.line,29);
 							return false;
 						}
 						String varType = s.getValueType();
@@ -198,27 +201,21 @@ public class Parsing
 									+ lexi.getFuncArgs(funcname).get(i));
 							return false;
 						}
-						// var or const type
 						String type = "var";
-						if (s.getType() == 2) {// const var
-							type = "cvar";
-						} else if (s.getType() == 5) {// var
-							type = "var";
-						} else if (s.getType() == 6) {// function args var
-							type = "fvar";
-						}
-						this.genCode.genCallFuncArgs(this.currentFuncName,
-								word, varType, type);
-
-					} else if (lexi.getNextChar() == '\''
-							&& lexi.isChar(word)) {
-						if (funargsType.equals("boolean")) {
+						if (s.getType() == 2)type = "cvar";
+						else if (s.getType() == 5)type = "var";
+						else if (s.getType() == 6)type = "fvar";
+						this.genCode.genCallFuncArgs(this.currentFuncName,word, varType, type);
+					}
+                    else if (lexi.getNextChar() == '\''	&& lexi.isChar(word))
+                    {
+						if (funargsType.equals("boolean"))
+                        {
 							System.out.println("Error<" + lexi.line + "> "
 									+ word + " is not "
 									+ lexi.getFuncArgs(funcname).get(i));
 							return false;
 						}
-						// char args const
 						Integer ic = (int) word.charAt(0);
 						this.genCode.genCallFuncArgs(this.currentFuncName, ic
 								.toString(), "char", "const");
@@ -303,28 +300,26 @@ public class Parsing
 			checkStatement();
 		}
 		if (!word.equals("end")) {
-			System.out.println("Error<" + lexi.line
-					+ "> missing 'end' in this begin block.");
+			new error(lexi.line,18);
 			return false;
 		}
 		word = lexi.readWord();
 		return true;
 	}
 
-	private boolean doIfBlock() {
-		if (!this.doCondition()) {
-			return false;
-		}
-		if (!word.equals("then")) {
-			System.out.println("Error<" + lexi.line + "> missing 'then' .");
+	private boolean doIfBlock()
+    {
+		if (!this.doCondition())return false;
+		if (!word.equals("then"))
+        {
+            new error(lexi.line,17);
 			return false;
 		}
 		word = lexi.readWord();
-		if (!this.checkStatement()) {
-			return false;
-		}
+		if (!this.checkStatement())return false;
 		this.genCode.genBackIf(this.currentFuncName);
-		if (word.equals("else")) {
+		if (word.equals("else"))
+        {
 			word = lexi.readWord();
 			if (!this.checkStatement()) {
 				return false;
@@ -334,62 +329,62 @@ public class Parsing
 		return true;
 	}
 
-	private boolean doWhileBlock() {
+	private boolean doWhileBlock()
+    {
 		this.genCode.genWhile(this.currentFuncName);
-		if (!this.doCondition()) {
-			return false;
-		}
-		if (!word.equals("do")) {
-			System.out.println("Error<" + lexi.line + "> missing 'do' .");
+		if (!this.doCondition())return false;
+		if (!word.equals("do"))
+        {
+            new error(lexi.line,19);
 			return false;
 		}
 		word = lexi.readWord();
-		if (!this.checkStatement()) {
-			return false;
-		}
+		if (!this.checkStatement())return false;
 		this.genCode.genBackWhile(this.currentFuncName);
 		return true;
 	}
 
-	private boolean doReadBlock() {
+	private boolean doReadBlock()
+    {
 		word = lexi.readWord();
-		if (!word.equals("(")) {
-			System.out.println("Error<" + lexi.line
-					+ "> missing '(' after read .");
+		if (!word.equals("("))
+        {
+            new error(lexi.line,1);
 			return false;
 		}
 		word = lexi.readWord();
-		while (true) {
+		while (true)
+        {
 			Symbol s;
-			if (!lexi.isWordMarked(word)) {
-				System.out.println("Error<" + lexi.line + "> " + word
-						+ " undefined.");
+			if (!lexi.isWordMarked(word))
+            {
+                new error(lexi.line,29);
 				return false;
-			} else {
+			}
+            else
+            {
 				s = lexi.getSymbol(word);
-				if (s.getType() == 2) {
-					System.out.println("Error<" + lexi.line + "> " + word
-							+ " is a const , can not be assigned value.");
+				if (s.getType() == 2)
+                {
+                    new error(lexi.line,30);
 					return false;
-				} else if (!(s.getType() == 5 || s.getType() == 6)) {
-					System.out.println("Error<" + lexi.line + "> " + word
-							+ " is not a variable .");
+				}
+                else if (!(s.getType() == 5 || s.getType() == 6))
+                {
+					new error(lexi.line,13);
 					return false;
 				}
 				word = lexi.readWord();
 			}
-			this.genCode.genRead(this.currentFuncName, s.getName(), s
-					.getValueType());
+			this.genCode.genRead(this.currentFuncName, s.getName(), s.getValueType());
 			if (word.equals(",")) {
 				word = lexi.readWord();
 				continue;
-			} else {
-				break;
-			}
+			} else break;
 		}
-		if (!word.equals(")")) {
-			System.out.println("Error<" + lexi.line
-					+ "> missing ')' after read .");
+		if (!word.equals(")"))
+        {
+            new error(lexi.line,10);
 			return false;
 		}
 		word = lexi.readWord();
@@ -398,56 +393,44 @@ public class Parsing
 
 	private boolean doWriteBlock() {
 		word = lexi.readWord();
-		if (!word.equals("(")) {
-			System.out
-					.println("Error<" + lexi.line + "> " + "missing '(' .");
+		if (!word.equals("("))
+        {
+            new error(lexi.line,1);
 			return false;
 		}
 		String argType = "()V";
-		while (true) {
-			// enter expression
+		while (true)
+        {
 			express_inst = new ArrayList<Integer>();
 			stack_digtal = new ArrayList<String>();
 			stack_op = new ArrayList<String>();
 			stack_op.add("#");
 			stack_digtal.add("#");
-			if (!doExpress()) {
-				return false;
-			}
+			if (!doExpress())return false;
 
 			argType = stack_digtal.get(stack_digtal.size() - 1);
-			// System.out.println("write block : args type is " + argType);
-			if (argType.equals("real")) {
-				argType = "(F)V";
-			} else if (argType.equals("integer")) {
-				argType = "(I)V";
-			} else if (argType.equals("char")) {
-				argType = "(C)V";
-			} else if (argType.equals("boolean")) {
-				argType = "(Z)V";
-			}
+			if (argType.equals("real"))argType = "(F)V";
+			else if (argType.equals("integer"))argType = "(I)V";
+			else if (argType.equals("char"))argType = "(C)V";
+            else if (argType.equals("boolean"))argType = "(Z)V";
 			this.genCode.genWrite(this.currentFuncName, express_inst, argType);
 
-			if (word.equals(",")) {
-				continue;
-			} else {
-				break;
-			}
+			if (word.equals(","))continue;
+			else break;
 		}
-		if (!word.equals(")")) {
-			System.out
-					.println("Error<" + lexi.line + "> " + "missing ')' .");
-			return false;
+		if (!word.equals(")"))
+        {
+            new error(lexi.line,10);
+            return false;
 		}
 		word = lexi.readWord();
 		return true;
 	}
 
-	private boolean doExpress() {
+	private boolean doExpress()
+    {
 		word = lexi.readWord();
-		if (word.equals("odd") || word.equals("call")) {
-			return false;
-		}
+		if (word.equals("odd") || word.equals("call"))return false;
 		if (word.equals("+") || word.equals("-")) {
 			stack_op.add(word);
 			word = lexi.readWord();
@@ -1252,21 +1235,18 @@ public class Parsing
 		} else if (lexi.isIdentity(word)) {
 			if (lexi.isWordMarked(word)) {
 				valueType = lexi.getSymbol(word).getValueType();
-				if (valueType.equals("boolean")) {
-					valueType = "integer";
-				} else if (valueType.equals("char")) {
+				if (valueType.equals("boolean"))valueType = "integer";
+				else if (valueType.equals("char")) {
 					valueType = "integer";
 					orgType = "char";
-				} else if (valueType.equals("integer")) {
-					orgType = "integer";
-				} else {
-					orgType = "real";
-				}
+				} else if (valueType.equals("integer"))orgType = "integer";
+				} else orgType = "real";
 				value = word;
 				retType = "var";
-			} else {
-				System.out.println("Error<" + lexi.line + "> " + word
-						+ " is not defined");
+			}
+            else
+            {
+                new error(lexi.line,29);
 				return false;
 			}
 		} else if (lexi.isInt(word)) {
