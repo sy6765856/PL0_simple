@@ -1,0 +1,286 @@
+It takes me a week to write the pl0 compiler.There are total of 5,000 line of code that all writing by mysely. If you use my code , please Please indicate the source .Please repect me and I believ your Reputation as a progromer.
+about me ： East China University Of Science And Techonogy (Ecust) ,  class 072 of Computer , liu bin(kingrl)  2010/11/30
+e-mail：tryanswer@gmail.com  
+chinaUnix blog: http://blog.chinaunix.net/u3/113325/ 
+
+pl0 functions: lexical analysis、syntax analyis、generate bytecodes(.class) base on jvm 、run java *.class 
+develop environment: ubuntu9.10 eclipse
+
+This is a extension Pl0 compiler，suporting "for while repeat if-else function procedure ..."
+and "char | boolean | integer | real types"
+the following is my test codes: 
+Attention:
+this struct of program is:
+	program program_name;
+		.... //put test codes here
+	. //.is end symbol , please pay a attention here that . can not be followed by test code directly.
+shortcoming：
+	I just build only one symbole table , so the variables can not the same in the plo source file . I pay attention to this , but I forgot it when I coding. And pl0 does not support global variable.
+
+//const defining
+const const_a=12,const_b=1.2,const_ch='c',const_bool=true;
+
+//indicate variable
+var var_a:char,var_b:integer,var_c:real,var_d:boolean;
+
+//assign statement
+var var_a:char,var_b:integer,var_c:real,var_d:boolean;
+var_a := 'c'
+var_b := 12
+var_c := 1.2
+var_d := true
+write(var_a,var_b,var_c,var_d)
+
+//begin statement
+var var_a:char,var_b:integer,var_c:real,var_d:boolean;
+begin
+	var_a := 'c';
+	var_b := 12;
+	var_c := 1.2;
+	var_d := true;
+	write(var_a,var_b,var_c,var_d)
+end
+
+//write
+var enter:char;
+enter:='10'
+write(1,enter,1.2,enter,'A',enter,true,enter)
+
+var var_a:char,var_b:integer,var_c:real,var_d:boolean;
+var_a := 'c'
+var_b := 12
+var_c := 1.2
+var_d := true
+write(enter,var_a,enter,var_b,enter,var_c,enter,var_d,enter)
+
+write(enter,var_b*2,enter,var_a+var_b,enter,var_c-var_a,enter)
+
+//read
+var enter:char;
+enter:='10'
+var var_a:char,var_b:integer,var_c:real,var_d:boolean;
+read(var_a,var_b,var_c,var_d)
+write(enter,var_a,enter,var_b,enter,var_c,enter,var_d,enter)
+
+//define procedure subProgram
+procedure helloword();
+	var h:char,l:char,w:char,e:char,o:char,r:char,d:char;
+	begin
+		h:='h';
+		l:='l';
+		w:='w';
+		o:='o';
+		e:='e';
+		r:='r';
+		d:='d';
+		write(h,e,l,l,o,w,o,r,l,d)
+	end
+;
+
+procedure println(var var_a:char,var var_b:integer,var var_c:real,var var_d:boolean);
+	var enter:char;
+	enter:='10'
+	write(enter,var_a,enter,var_b,enter,var_c,enter,var_d,enter)
+;
+call println('A',123,12.2,true)
+
+function func(var var_a:char,var var_b:integer,var var_c:real,var var_d:boolean):real;
+	var var_e:real;
+	var_e := var_a+var_b+var_c+var_d
+;
+return var_e
+var var_f:real;
+var_f := call func('A',1,1.2,true)   //return value can be assign to a variable
+write(var_f)
+
+//sum subprogram
+function Sum(var fromV:integer,var toV:integer):integer;
+	var sum:integer;
+	sum := 0
+	var i:integer;
+	//for 循环
+	for i:=fromV to toV do //增加了变量赋值
+	begin
+		sum := sum + i
+	end;
+;
+return sum
+var var_sum:integer;
+var_sum := call Sum(1,101)
+write(var_sum)
+
+//NB's for loop , hehe ~
+/* 1. */
+var space:char;
+space:='32'
+var i:integer;
+for i:=1 to 10 do
+begin
+	write(i,space)
+end;
+
+/* 2. */
+var space:char;
+space:='32'
+var i:integer;
+var fromV:integer,toV:integer;
+fromV:=1
+toV:=10
+for i:=fromV to toV do
+begin
+	write(i,space)
+end;
+
+/* 3. */
+var space:char;
+space:='32'
+var i:integer;
+var fromV:integer,toV:real;//toV is real
+fromV:=1
+toV:=7.2
+for i:=fromV to toV do
+begin
+	write(i,space)
+end;
+
+/* 4. */
+var space:char;
+space:='32'
+var i:real;
+var fromV:real,toV:real;//fromV toV is real
+fromV:=1.2
+toV:=7.2
+for i:=fromV to toV do
+begin
+	write(i,space)
+end;
+//for support many functions.
+
+//if statement
+/* 1*/
+if odd true then
+	write(true)
+else
+	write(false)
+/* 2. */
+if odd -1 then //not zero is true.
+	write(true)
+else
+	write(false)
+/* 3. */
+var a:integer;
+var b:integer;
+a:= 10
+b:= 1
+if a>b then
+	write(a)
+else
+	write(b)
+//swap a,b subprogram ; if a>b swap (a,b)
+procedure swap(var a:integer,var b:integer);
+	var temp:integer;
+	var space:char;
+	space:='32'
+	if a>b then
+		begin
+			temp := a;
+			a := b;
+			b := temp
+		end
+	else	
+		begin
+			write(space);//nest If statement
+			if a=b then
+				write(1,space)	
+			else
+				write(0,space)
+		end
+	write(a,space,b)				
+;
+call swap(3,2)
+call swap(2,3)
+//if ....
+
+
+//while statement
+//print ABC subprogram
+procedure printABC();
+	var a:char;
+	a:='A'
+	while a<>'Z' do
+		begin
+			write(a);	
+			a:=a+1
+		end;
+call printABC()
+//neset while subprogram
+procedure emWhile();
+	var i:integer;
+	i:=1
+	var space:char;
+	space:='32'
+	var t:integer;
+	t:=-1
+	while i<10 do
+		begin 
+			write(i);
+			write(space);
+			i:=i+1;
+			while i<5 do
+				begin
+					write(space);
+					write(t);
+					i:=i+1
+				end
+		end
+;
+call emWhile()
+
+//repeat statement
+var a:integer;
+var b:integer;
+a := 2
+b := 10
+repeat
+	begin
+		write(a);
+		a:=a+1
+	end
+until a>b
+
+//nest call subprogram
+function Sum(var fromV:integer,var toV:integer):integer;
+	var sum:integer;
+	sum := 0
+	var i:integer;
+	//for loop
+	for i:=fromV to toV do //add variable assignment.
+	begin
+		sum := sum + i
+	end;
+;
+return sum
+procedure printABC();
+	var a:char;
+	a:='A'
+	while a<>'Z' do
+		begin
+			write(a);	
+			a:=a+1
+		end
+	var var_sum:integer;
+	var_sum := call Sum(1,101)
+	write(var_sum)
+;
+call printABC()
+
+//expression support complex computer.
+var a:real;
+var b:integer;
+var c:char;
+b := 1
+c := 'A'
+a := (b*2)/2+c-2*c+1
+write(a)
+
+CopyRight by kingrl of ecust .
