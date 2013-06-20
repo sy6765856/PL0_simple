@@ -21,9 +21,10 @@ public class Plc {
     {
 		if (args.length != 1)
         {
-			System.out.println("Please input source_file name:");
+			System.out.println("Please input source_file name!");
 			return;
 		}
+        System.out.println("Success!");
 		Plc.init();
 		RandomAccessFile randomFile = null;
 		try
